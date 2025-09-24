@@ -4,19 +4,20 @@
 #include <climits>
 using namespace std;
 
-class Toss
-{
+class Game {
 public:
-    void execute(int choice)
-    {
+    virtual int play() = 0;
+    virtual ~Game() {}
+};
+
+class Toss {
+public:
+    void execute(int choice) {
         int compTossRand = rand() % 2;
-        if (compTossRand == choice)
-        {
+        if (compTossRand == choice) {
             cout << "\n\nThe Toss Result matches your choice.\n";
             cout << "You Won the toss & now you can proceed.\n\n";
-        }
-        else
-        {
+        } else {
             cout << "The Toss Result doesn't match your choice.\n";
             cout << "You lost the toss & it's now another player's turn.\n\n";
         }
@@ -24,9 +25,8 @@ public:
     }
 };
 
-class Innings
-{
-private:
+class Innings : public Game {
+protected: 
     int wickets;
     int overs;
     int target;
@@ -35,30 +35,34 @@ private:
     int currentOver[6];
     bool isChase;
 
-    int validateRun(int inputRun, int compRun)
-    {
-        if (inputRun == 5 || inputRun > 6 || inputRun < 0)
-        {
+    int validateRun(int inputRun, int compRun) {
+        if (inputRun == 5 || inputRun > 6 || inputRun < 0) {
             cout << "\n\nInvalid Input!! Your score is 0.\n\n";
             return 0;
         }
-        else if (compRun == inputRun)
-        {
+        else if (compRun == inputRun) {
             return 0;
         }
         return inputRun;
     }
 
 public:
-    Innings(int w, int o, int t = -1)
-        : wickets(w), overs(o), target(t), totalRuns(0), ballsBowled(0), isChase(t != -1)
-    {
-        for (int &ball : currentOver)
-            ball = 0;
+    Innings(int w, int o)
+        : wickets(w), overs(o), target(-1), totalRuns(0), ballsBowled(0), isChase(false) {
+        for (int &ball : currentOver) ball = 0;
     }
 
-    int play()
-    {
+    Innings(int w, int o, int t)
+        : wickets(w), overs(o), target(t), totalRuns(0), ballsBowled(0), isChase(true) {
+        for (int &ball : currentOver) ball = 0;
+    }
+
+    friend ostream& operator<<(ostream& os, const Innings& in) {
+        os << "Runs: " << in.totalRuns << ", Wickets left: " << in.wickets;
+        return os;
+    }
+
+    int play() override {
         const int runValues[6] = {0, 1, 2, 3, 4, 6};
         const int ballSpeed[6] = {133, 93, 144, 95, 143, 97};
         const char *ballTypes[6] = {"Pace", "Off-Spin", "In-Swing", "Googly", "Out-Swing", "Carrom-Ball"};
@@ -67,10 +71,8 @@ public:
         int ballsThisOver = 0;
         int remainingOvers = overs;
 
-        while (wickets > 0 && remainingOvers > 0)
-        {
-            if (ballsThisOver < 6)
-            {
+        while (wickets > 0 && remainingOvers > 0) {
+            if (ballsThisOver < 6) {
                 int randomIndex = rand() % 6;
                 int compRun = runValues[randomIndex];
                 int ballVelocity = ballSpeed[randomIndex];
@@ -80,8 +82,7 @@ public:
                 int userRun;
                 cin >> userRun;
 
-                if (userRun < 0 || userRun > 6 || userRun == 5)
-                {
+                if (userRun < 0 || userRun > 6 || userRun == 5) {
                     cout << "Invalid runs input.\n";
                     continue;
                 }
@@ -92,8 +93,7 @@ public:
 
                 userRun = validateRun(userRun, compRun);
 
-                if (compRun == userRun)
-                {
+                if (compRun == userRun) {
                     currentOver[ballsThisOver] = 0;
                     wickets--;
                     ballsThisOver++;
@@ -102,20 +102,14 @@ public:
                     cout << "   What a " << outTypes[outTypeIndex] << " !!\n";
                     cout << "======================\n";
                     cout << "Total Score: " << totalRuns << "  Wickets left: " << wickets << "\n";
-                    if (wickets == 0)
-                        break;
-                }
-                else if (userRun == 6)
-                {
-                    if (compRun == 1)
-                    {
+                    if (wickets == 0) break;
+                } else if (userRun == 6) {
+                    if (compRun == 1) {
                         totalRuns += 6;
                         currentOver[ballsThisOver] = 6;
                         ballsThisOver++;
                         cout << "\n===========\n   Sixer\n===========\n";
-                    }
-                    else
-                    {
+                    } else {
                         currentOver[ballsThisOver] = -1;
                         wickets--;
                         ballsThisOver++;
@@ -123,33 +117,23 @@ public:
                         cout << "     W I C K E T\n";
                         cout << "   What a " << outTypes[outTypeIndex] << " !!\n";
                         cout << "======================\n";
-                        if (wickets == 0)
-                            break;
+                        if (wickets == 0) break;
                     }
-                }
-                else
-                {
+                } else {
                     totalRuns += userRun;
                     currentOver[ballsThisOver] = userRun;
                     ballsThisOver++;
-                    if (userRun == 4)
-                    {
+                    if (userRun == 4) {
                         cout << "\n======================\n";
                         cout << "   Down The Ground\n";
                         cout << "======================\n";
                     }
                 }
 
-                if (isChase && totalRuns > target)
-                {
-                    break;
-                }
-            }
-            else
-            {
+                if (isChase && totalRuns > target) break;
+            } else {
                 cout << "This Over: ";
-                for (int i = 0; i < 6; ++i)
-                {
+                for (int i = 0; i < 6; ++i) {
                     cout << currentOver[i] << " ";
                 }
                 cout << "\n\n-1 means Wicket\n";
@@ -164,18 +148,14 @@ public:
     }
 };
 
-class SuperOver
-{
+class SuperOver : public Game {
 private:
-    int validateRun(int inputRun, int compRun, int playerNum)
-    {
-        if (inputRun == 5 || inputRun > 6 || inputRun < 0)
-        {
+    int validateRun(int inputRun, int compRun, int playerNum) {
+        if (inputRun == 5 || inputRun > 6 || inputRun < 0) {
             cout << "\n\nInvalid Input!! Your score is 0.\n\n";
             return 0;
         }
-        else if (compRun == inputRun)
-        {
+        else if (compRun == inputRun) {
             cout << "\n\nThe score of player " << playerNum << " is 0.\n";
             return 0;
         }
@@ -184,8 +164,7 @@ private:
     }
 
 public:
-    void play()
-    {
+    int play() override {
         const int runValues[6] = {0, 1, 2, 3, 4, 6};
         cout << "\n\nRULE: Only one ball per player\n";
 
@@ -202,30 +181,31 @@ public:
         cout << "Computer's choice: " << compRun << ".\n";
         int score2 = validateRun(player2Run, compRun, 2);
 
-        if (score1 == score2)
-        {
+        if (score1 == score2) {
             cout << "\nScores are tied! Starting SUPER OVER...\n";
             cout << "==========================\n";
             cout << "    S U P E R B A L L\n";
             cout << "==========================\n";
-            play();
+            return play();
         }
-        else if (score1 > score2)
-        {
+        else if (score1 > score2) {
             cout << "\nPlayer 1 wins!\n";
         }
-        else
-        {
+        else {
             cout << "\nPlayer 2 wins!\n";
         }
+        return 0;
     }
 };
 
-class CricketGame
-{
+class CricketGame {
 private:
-    void displayRules()
-    {
+    Toss tossObj;
+    Game* firstInnings;
+    Game* secondInnings;
+    Game* superOverObj;
+
+    void displayRules() {
         cout << "= = = = = = = = = = = = = = = V I T  C R I C K E T = = = = = = = = = = = = = = =\n\n";
         cout << "+ + + + + + + + + + + + R U L E S + + + + + + + + + + + +\n\n";
         cout << "1. Standard players: <=11\n";
@@ -236,66 +216,41 @@ private:
         cout << "= = = = = = = = = = = = = = = V I T  C R I C K E T = = = = = = = = = = = = = = =\n\n";
     }
 
-    float calculateRunRate(int runs, float overs)
-    {
+    float calculateRunRate(int runs, float overs) {
         return (runs / overs) + 0.3f;
     }
 
 public:
-    void start()
-    {
+    void start() {
         srand(static_cast<unsigned>(time(0)));
         displayRules();
 
         int wickets, overs;
         cout << "Enter number of wickets: ";
         cin >> wickets;
-        if (wickets <= 0)
-        {
-            cout << "Invalid input! Exiting.\n";
-            return;
-        }
+        if (wickets <= 0) { cout << "Invalid input! Exiting.\n"; return; }
 
         cout << "Enter number of overs: ";
         cin >> overs;
-        if (overs <= 0)
-        {
-            cout << "Invalid input! Exiting.\n";
-            return;
-        }
+        if (overs <= 0) { cout << "Invalid input! Exiting.\n"; return; }
 
         int choice;
         cout << "1. Toss\n2. Exit\nChoice: ";
         cin >> choice;
 
-        if (choice == 2)
-        {
-            cout << "Exiting game.\n";
-            return;
-        }
+        if (choice == 2) { cout << "Exiting game.\n"; return; }
 
         char tossChoice;
         cout << "Heads (H) or Tails (T)? ";
         cin >> tossChoice;
 
-        Toss tossObj;
-        if (tossChoice == 'H' || tossChoice == 'h')
-        {
-            tossObj.execute(0);
-        }
-        else if (tossChoice == 'T' || tossChoice == 't')
-        {
-            tossObj.execute(1);
-        }
-        else
-        {
-            cout << "Invalid choice! Exiting.\n";
-            return;
-        }
+        if (tossChoice == 'H' || tossChoice == 'h') tossObj.execute(0);
+        else if (tossChoice == 'T' || tossChoice == 't') tossObj.execute(1);
+        else { cout << "Invalid choice! Exiting.\n"; return; }
 
-        Innings firstInnings(wickets, overs);
+        firstInnings = new Innings(wickets, overs);
         cout << "\n===== FIRST INNINGS START =====\n";
-        int score1 = firstInnings.play();
+        int score1 = firstInnings->play();
         cout << "\nFirst innings total: " << score1 << "\n";
 
         int target = score1 + 1;
@@ -303,29 +258,31 @@ public:
         cout << "TARGET: " << target << "\n";
         cout << "Required run rate: " << calculateRunRate(score1, overs) << "\n";
 
-        Innings secondInnings(wickets, overs, target);
-        int score2 = secondInnings.play();
+        secondInnings = new Innings(wickets, overs, target);
+        int score2 = secondInnings->play();
         cout << "\nSecond innings total: " << score2 << "\n";
 
-        if (score1 == score2)
-        {
+        if (score1 == score2) {
             cout << "\n===== SUPER OVER INITIATED =====\n";
-            SuperOver super;
-            super.play();
+            superOverObj = new SuperOver();
+            superOverObj->play();
+            delete superOverObj;
         }
-        else if (score1 > score2)
-        {
-            cout << "\nPlayer 1 wins runs!\n";
+        else if (score1 > score2) {
+            cout << "\nPlayer 1 wins!\n";
         }
-        else
-        {
-            cout << "\nPlayer 2 wins ";
+        else {
+            cout << "\nPlayer 2 wins!\n";
         }
+
+        cout << "\nFirst Innings Summary => " << ((Innings)firstInnings) << "\n";
+
+        delete firstInnings;
+        delete secondInnings;
     }
 };
 
-int main()
-{
+int main() {
     CricketGame game;
     game.start();
     return 0;
