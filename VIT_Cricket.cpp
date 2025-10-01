@@ -274,8 +274,10 @@ public:
         else {
             cout << "\nPlayer 2 wins!\n";
         }
-
-        cout << "\nFirst Innings Summary => " << ((Innings)firstInnings) << "\n";
+        Innings* inPtr = dynamic_cast<Innings*>(firstInnings);
+        if (inPtr) {
+            cout << "\nFirst Innings Summary => " << *inPtr << "\n";
+        }
 
         delete firstInnings;
         delete secondInnings;
