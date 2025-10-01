@@ -134,9 +134,8 @@ public:
             } else {
                 cout << "This Over: ";
                 for (int i = 0; i < 6; ++i) {
-                    cout << currentOver[i] << " ";
+                    cout << (currentOver[i] == -1 ? 'W' : char('0' + currentOver[i])) << " ";
                 }
-                cout << "\n\n-1 means Wicket\n";
                 cout << "\n----------------------------\n";
                 cout << "      New over started\n";
                 cout << "----------------------------\n";
